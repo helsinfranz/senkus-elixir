@@ -61,7 +61,11 @@ function ProfileContent() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 <div>
                   <p className="text-gray-400 text-xs md:text-sm">Scientist ID</p>
-                  <p className="text-white font-mono text-sm md:text-lg break-all">{walletAddress}</p>
+                  <p className="text-white font-mono text-sm md:text-lg break-all">
+                    {walletAddress && walletAddress.length > 10
+                      ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+                      : walletAddress}
+                  </p>
                 </div>
                 <div>
                   <p className="text-gray-400 text-xs md:text-sm">Experiments Completed</p>
