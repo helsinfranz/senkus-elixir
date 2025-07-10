@@ -1,37 +1,35 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Atom, Gem, FileText } from "lucide-react"
+import { Atom, Gem, FileText, LogOut } from "lucide-react"
+import { useWallet } from "@/contexts/wallet-context"
 
 export default function Header() {
-  const [isConnected, setIsConnected] = useState(false)
-  const [walletAddress, setWalletAddress] = useState("")
-  const [fluorBalance, setFluorBalance] = useState(15)
-  const [nftCount, setNftCount] = useState(2)
+  const { isConnected, walletAddress, fluorBalance, nftCount, connectWallet, disconnectWallet, isConnecting } =
+    useWallet()
   const pathname = usePathname()
-
-  const connectWallet = () => {
-    // Simulate wallet connection
-    setIsConnected(true)
-    setWalletAddress("0x1234...5678")
-  }
 
   const isActivePage = (path) => pathname === path
 
+  const formatAddress = (address) => {
+    if (!address) return ""
+    return `${address.slice(0, 6)}...${address.slice(-4)}`
+  }
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-gray-900/20 backdrop-blur-md border-b border-green-500/30">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 h-14 md:h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2 text-white hover:text-green-400 transition-colors">
-          <Atom className="w-8 h-8 text-green-400" />
-          <span className="text-xl font-bold">Senku's Elixir</span>
+          <Atom className="w-6 h-6 md:w-8 md:h-8 text-green-400" />
+          <span className="text-lg md:text-xl font-bold hidden sm:block">Senku's Elixir</span>
+          <span className="text-lg md:text-xl font-bold sm:hidden">Senku</span>
         </Link>
 
         {/* Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
+        <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
           <Link
             href="/"
             className={`text-sm font-medium transition-colors ${
@@ -63,21 +61,49 @@ export default function Header() {
           {!isConnected ? (
             <Button
               onClick={connectWallet}
-              className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-400 hover:to-blue-400 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-300"
+              disabled={isConnecting}
+              className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-400 hover:to-blue-400 text-white font-semibold px-4 md:px-6 py-2 rounded-lg transition-all duration-300 text-sm md:text-base"
             >
-              Connect Wallet
+              {isConnecting ? "Connecting..." : "Connect Wallet"}
             </Button>
           ) : (
-            <div className="flex items-center space-x-4 bg-gray-800/60 backdrop-blur-sm border border-gray-600/50 rounded-lg px-4 py-2">
-              <span className="text-white font-mono text-sm">{walletAddress}</span>
-              <div className="flex items-center space-x-1 text-blue-400">
-                <Gem className="w-4 h-4" />
-                <span className="text-sm font-semibold">{fluorBalance}</span>
+            <div className="flex items-center space-x-2 md:space-x-4">
+              {/* Mobile Layout */}
+              <div className="md:hidden flex items-center space-x-2 bg-gray-800/60 backdrop-blur-sm border border-gray-600/50 rounded-lg px-2 py-1">
+                <span className="text-white font-mono text-xs">{formatAddress(walletAddress)}</span>
+                <div className="flex items-center space-x-1">
+                  <div className="flex items-center space-x-1 text-blue-400">
+                    <Gem className="w-3 h-3" />
+                    <span className="text-xs font-semibold">{fluorBalance}</span>
+                  </div>
+                  <div className="flex items-center space-x-1 text-purple-400">
+                    <FileText className="w-3 h-3" />
+                    <span className="text-xs font-semibold">{nftCount}</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center space-x-1 text-purple-400">
-                <FileText className="w-4 h-4" />
-                <span className="text-sm font-semibold">{nftCount}</span>
+
+              {/* Desktop Layout */}
+              <div className="hidden md:flex items-center space-x-4 bg-gray-800/60 backdrop-blur-sm border border-gray-600/50 rounded-lg px-4 py-2">
+                <span className="text-white font-mono text-sm">{formatAddress(walletAddress)}</span>
+                <div className="flex items-center space-x-1 text-blue-400">
+                  <Gem className="w-4 h-4" />
+                  <span className="text-sm font-semibold">{fluorBalance}</span>
+                </div>
+                <div className="flex items-center space-x-1 text-purple-400">
+                  <FileText className="w-4 h-4" />
+                  <span className="text-sm font-semibold">{nftCount}</span>
+                </div>
               </div>
+
+              <Button
+                onClick={disconnectWallet}
+                variant="outline"
+                size="sm"
+                className="bg-gray-800/50 border-gray-600/50 text-white hover:bg-gray-700/50 p-2"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
             </div>
           )}
         </div>

@@ -3,15 +3,16 @@
 import { useState } from "react"
 import Header from "@/components/header"
 import ParticleBackground from "@/components/particle-background"
+import RouteGuard from "@/components/route-guard"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { useWallet } from "@/contexts/wallet-context"
 
-export default function Profile() {
+function ProfileContent() {
+  const { walletAddress, fluorBalance, nftCount } = useWallet()
+
   const [userStats] = useState({
-    walletAddress: "0x1234...5678",
     levelsCompleted: 23,
-    fluorBalance: 15,
-    nftCount: 2,
   })
 
   const [nfts] = useState([
@@ -54,21 +55,21 @@ export default function Profile() {
       <main className="relative z-10 pt-20 pb-8 px-4">
         <div className="max-w-6xl mx-auto">
           {/* Profile Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-white mb-4">Personal Laboratory</h1>
-            <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-lg p-6 max-w-2xl mx-auto">
+          <div className="text-center mb-8 md:mb-12">
+            <h1 className="text-2xl md:text-4xl font-bold text-white mb-4">Personal Laboratory</h1>
+            <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-lg p-4 md:p-6 max-w-2xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 <div>
-                  <p className="text-gray-400 text-sm">Scientist ID</p>
-                  <p className="text-white font-mono text-lg">{userStats.walletAddress}</p>
+                  <p className="text-gray-400 text-xs md:text-sm">Scientist ID</p>
+                  <p className="text-white font-mono text-sm md:text-lg break-all">{walletAddress}</p>
                 </div>
                 <div>
-                  <p className="text-gray-400 text-sm">Experiments Completed</p>
-                  <p className="text-green-400 font-bold text-2xl">{userStats.levelsCompleted}</p>
+                  <p className="text-gray-400 text-xs md:text-sm">Experiments Completed</p>
+                  <p className="text-green-400 font-bold text-xl md:text-2xl">{userStats.levelsCompleted}</p>
                 </div>
                 <div>
-                  <p className="text-gray-400 text-sm">FLUOR Balance</p>
-                  <p className="text-blue-400 font-bold text-2xl">{userStats.fluorBalance}</p>
+                  <p className="text-gray-400 text-xs md:text-sm">FLUOR Balance</p>
+                  <p className="text-blue-400 font-bold text-xl md:text-2xl">{fluorBalance}</p>
                 </div>
               </div>
             </div>
@@ -76,15 +77,19 @@ export default function Profile() {
 
           {/* NFT Gallery */}
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-white mb-6 text-center">Kingdom of Science Blueprints</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-6 text-center">
+              Kingdom of Science Blueprints
+            </h2>
 
             {nfts.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-400 text-lg">No blueprints discovered yet.</p>
-                <p className="text-gray-500 mt-2">Complete experiments and unlock NFTs to build your collection!</p>
+              <div className="text-center py-8 md:py-12">
+                <p className="text-gray-400 text-base md:text-lg">No blueprints discovered yet.</p>
+                <p className="text-gray-500 mt-2 text-sm md:text-base">
+                  Complete experiments and unlock NFTs to build your collection!
+                </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {nfts.map((nft) => (
                   <Card
                     key={nft.id}
@@ -93,9 +98,9 @@ export default function Profile() {
                   >
                     <CardContent className="p-4">
                       <div className="aspect-square bg-gradient-to-br from-green-900/20 to-blue-900/20 rounded-lg mb-4 flex items-center justify-center border border-gray-600/30">
-                        <div className="text-6xl">🧬</div>
+                        <div className="text-4xl md:text-6xl">🧬</div>
                       </div>
-                      <h3 className="text-white font-semibold mb-2">{nft.name}</h3>
+                      <h3 className="text-white font-semibold mb-2 text-sm md:text-base">{nft.name}</h3>
                       <Badge className={`text-xs ${getRarityStyle(nft.rarity)}`}>{nft.rarity}</Badge>
                     </CardContent>
                   </Card>
@@ -109,18 +114,18 @@ export default function Profile() {
       {/* NFT Detail Modal */}
       {selectedNft && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900/90 backdrop-blur-md border border-gray-700/50 rounded-lg max-w-md w-full p-6">
+          <div className="bg-gray-900/90 backdrop-blur-md border border-gray-700/50 rounded-lg max-w-md w-full p-4 md:p-6">
             <div className="text-center mb-4">
               <div className="aspect-square bg-gradient-to-br from-green-900/20 to-blue-900/20 rounded-lg mb-4 flex items-center justify-center border border-gray-600/30">
-                <div className="text-8xl">🧬</div>
+                <div className="text-6xl md:text-8xl">🧬</div>
               </div>
-              <h3 className="text-white font-bold text-xl mb-2">{selectedNft.name}</h3>
+              <h3 className="text-white font-bold text-lg md:text-xl mb-2">{selectedNft.name}</h3>
               <Badge className={`mb-4 ${getRarityStyle(selectedNft.rarity)}`}>{selectedNft.rarity}</Badge>
-              <p className="text-gray-300 text-sm">{selectedNft.description}</p>
+              <p className="text-gray-300 text-xs md:text-sm">{selectedNft.description}</p>
             </div>
             <button
               onClick={() => setSelectedNft(null)}
-              className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-400 hover:to-blue-400 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300"
+              className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-400 hover:to-blue-400 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 text-sm md:text-base"
             >
               Close
             </button>
@@ -128,5 +133,13 @@ export default function Profile() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function Profile() {
+  return (
+    <RouteGuard>
+      <ProfileContent />
+    </RouteGuard>
   )
 }
