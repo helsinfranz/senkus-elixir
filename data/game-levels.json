@@ -1,0 +1,113 @@
+{
+  "levels": {
+    "1": {
+      "id": 1,
+      "difficulty": "Easy",
+      "tubes": [
+        [
+          { "color": "#FFD700", "id": 1 },
+          { "color": "#FF6B35", "id": 2 },
+          { "color": "#DC143C", "id": 3 },
+          { "color": "#00FF7F", "id": 4 }
+        ],
+        [
+          { "color": "#FF6B35", "id": 2 },
+          { "color": "#9932CC", "id": 5 },
+          { "color": "#FFD700", "id": 1 },
+          { "color": "#9932CC", "id": 5 }
+        ],
+        [
+          { "color": "#DC143C", "id": 3 },
+          { "color": "#1E90FF", "id": 6 },
+          { "color": "#00FF7F", "id": 4 },
+          { "color": "#DC143C", "id": 3 }
+        ],
+        [
+          { "color": "#00FF7F", "id": 4 },
+          { "color": "#FF6B35", "id": 2 },
+          { "color": "#FFD700", "id": 1 },
+          { "color": "#1E90FF", "id": 6 }
+        ],
+        [
+          { "color": "#1E90FF", "id": 6 },
+          { "color": "#9932CC", "id": 5 },
+          { "color": "#00FF7F", "id": 4 },
+          { "color": "#FFD700", "id": 1 }
+        ],
+        [],
+        [],
+        [],
+        []
+      ]
+    },
+    "2": {
+      "id": 2,
+      "difficulty": "Easy",
+      "tubes": [
+        [
+          { "color": "#FF4444", "id": 1 },
+          { "color": "#44FF44", "id": 2 },
+          { "color": "#4444FF", "id": 3 }
+        ],
+        [
+          { "color": "#44FF44", "id": 2 },
+          { "color": "#FF4444", "id": 1 },
+          { "color": "#4444FF", "id": 3 }
+        ],
+        [
+          { "color": "#4444FF", "id": 3 },
+          { "color": "#FF4444", "id": 1 },
+          { "color": "#44FF44", "id": 2 }
+        ],
+        [],
+        [],
+        []
+      ]
+    },
+    "3": {
+      "id": 3,
+      "difficulty": "Medium",
+      "tubes": [
+        [
+          { "color": "#FFD700", "id": 1 },
+          { "color": "#FF6B35", "id": 2 },
+          { "color": "#DC143C", "id": 3 },
+          { "color": "#00FF7F", "id": 4 }
+        ],
+        [
+          { "color": "#9932CC", "id": 5 },
+          { "color": "#1E90FF", "id": 6 },
+          { "color": "#FFD700", "id": 1 },
+          { "color": "#FF6B35", "id": 2 }
+        ],
+        [
+          { "color": "#DC143C", "id": 3 },
+          { "color": "#00FF7F", "id": 4 },
+          { "color": "#9932CC", "id": 5 },
+          { "color": "#1E90FF", "id": 6 }
+        ],
+        [
+          { "color": "#FFD700", "id": 1 },
+          { "color": "#DC143C", "id": 3 },
+          { "color": "#FF6B35", "id": 2 },
+          { "color": "#00FF7F", "id": 4 }
+        ],
+        [
+          { "color": "#1E90FF", "id": 6 },
+          { "color": "#9932CC", "id": 5 },
+          { "color": "#FFD700", "id": 1 },
+          { "color": "#DC143C", "id": 3 }
+        ],
+        [
+          { "color": "#00FF7F", "id": 4 },
+          { "color": "#FF6B35", "id": 2 },
+          { "color": "#1E90FF", "id": 6 },
+          { "color": "#9932CC", "id": 5 }
+        ],
+        [],
+        [],
+        []
+      ]
+    }
+  }
+}

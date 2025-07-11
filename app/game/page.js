@@ -22,46 +22,15 @@ function GameArenaContent() {
     showInitialTokens: false,
   })
 
-  const [tubes, setTubes] = useState([
-    // Initial game state - 5 tubes with mixed liquids, 4 empty tubes
-    [
-      { color: "#FFD700", id: 1 }, // Yellow
-      { color: "#FF6B35", id: 2 }, // Orange
-      { color: "#DC143C", id: 3 }, // Red
-      { color: "#00FF7F", id: 4 }, // Green
-    ],
-    [
-      { color: "#FF6B35", id: 2 },
-      { color: "#9932CC", id: 5 }, // Purple
-      { color: "#FFD700", id: 1 },
-      { color: "#9932CC", id: 5 },
-    ],
-    [
-      { color: "#DC143C", id: 3 },
-      { color: "#1E90FF", id: 6 }, // Blue
-      { color: "#00FF7F", id: 4 },
-      { color: "#DC143C", id: 3 },
-    ],
-    [
-      { color: "#00FF7F", id: 4 },
-      { color: "#FF6B35", id: 2 },
-      { color: "#FFD700", id: 1 },
-      { color: "#1E90FF", id: 6 },
-    ],
-    [
-      { color: "#1E90FF", id: 6 },
-      { color: "#9932CC", id: 5 },
-      { color: "#00FF7F", id: 4 },
-      { color: "#FFD700", id: 1 },
-    ],
-    [], // Empty tubes
-    [],
-    [],
-    [],
-  ])
-
+  const [tubes, setTubes] = useState([])
   const [selectedTube, setSelectedTube] = useState(null)
   const [moveHistory, setMoveHistory] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isCheckingCompletion, setIsCheckingCompletion] = useState(false)
+
+  useEffect(() => {
+    loadLevel(gameState.currentLevel)
+  }, [gameState.currentLevel])
 
   useEffect(() => {
     // Show initial tokens modal for first-time players
@@ -69,6 +38,71 @@ function GameArenaContent() {
       setGameState((prev) => ({ ...prev, showInitialTokens: true }))
     }
   }, [])
+
+  const loadLevel = async (levelId) => {
+    setIsLoading(true)
+    try {
+      const response = await fetch(`/api/game/level/${levelId}`)
+      const data = await response.json()
+
+      if (data.success) {
+        setTubes(data.level.tubes)
+        setSelectedTube(null)
+        setMoveHistory([])
+      } else {
+        console.error("Failed to load level:", data.error)
+        // Fallback to default level if API fails
+        setTubes([
+          [
+            { color: "#FFD700", id: 1 },
+            { color: "#FF6B35", id: 2 },
+            { color: "#DC143C", id: 3 },
+          ],
+          [
+            { color: "#FF6B35", id: 2 },
+            { color: "#DC143C", id: 3 },
+            { color: "#FFD700", id: 1 },
+          ],
+          [],
+          [],
+        ])
+      }
+    } catch (error) {
+      console.error("Error loading level:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const checkLevelCompletion = async (currentTubes) => {
+    setIsCheckingCompletion(true)
+    try {
+      const response = await fetch("/api/game/check-completion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ tubes: currentTubes }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.isCompleted) {
+        setGameState((prev) => ({
+          ...prev,
+          levelsCompleted: prev.levelsCompleted + 1,
+          showLevelComplete: true,
+        }))
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error("Error checking completion:", error)
+      return false
+    } finally {
+      setIsCheckingCompletion(false)
+    }
+  }
 
   const claimInitialTokens = () => {
     setFluorBalance(5)
@@ -87,7 +121,6 @@ function GameArenaContent() {
         currentLevel: prev.currentLevel + 1,
         showLevelComplete: false,
       }))
-      // Generate new level here
     }
   }
 
@@ -108,45 +141,7 @@ function GameArenaContent() {
   }
 
   const resetGame = () => {
-    // Reset to initial state
-    setTubes([
-      [
-        { color: "#FFD700", id: 1 },
-        { color: "#FF6B35", id: 2 },
-        { color: "#DC143C", id: 3 },
-        { color: "#00FF7F", id: 4 },
-      ],
-      [
-        { color: "#FF6B35", id: 2 },
-        { color: "#9932CC", id: 5 },
-        { color: "#FFD700", id: 1 },
-        { color: "#9932CC", id: 5 },
-      ],
-      [
-        { color: "#DC143C", id: 3 },
-        { color: "#1E90FF", id: 6 },
-        { color: "#00FF7F", id: 4 },
-        { color: "#DC143C", id: 3 },
-      ],
-      [
-        { color: "#00FF7F", id: 4 },
-        { color: "#FF6B35", id: 2 },
-        { color: "#FFD700", id: 1 },
-        { color: "#1E90FF", id: 6 },
-      ],
-      [
-        { color: "#1E90FF", id: 6 },
-        { color: "#9932CC", id: 5 },
-        { color: "#00FF7F", id: 4 },
-        { color: "#FFD700", id: 1 },
-      ],
-      [],
-      [],
-      [],
-      [],
-    ])
-    setSelectedTube(null)
-    setMoveHistory([])
+    loadLevel(gameState.currentLevel)
   }
 
   const undoMove = () => {
@@ -157,7 +152,9 @@ function GameArenaContent() {
     }
   }
 
-  const handleTubeClick = (tubeIndex) => {
+  const handleTubeClick = async (tubeIndex) => {
+    if (isCheckingCompletion) return // Prevent clicks during completion check
+
     if (selectedTube === null) {
       // Select tube if it has liquid
       if (tubes[tubeIndex].length > 0) {
@@ -171,42 +168,46 @@ function GameArenaContent() {
       const fromTube = tubes[selectedTube]
       const toTube = tubes[tubeIndex]
 
-      if (fromTube.length > 0 && (toTube.length === 0 || toTube.length < 4)) {
+      if (
+        fromTube.length > 0 &&
+        (toTube.length === 0 ||
+          (toTube.length < 4 && toTube[toTube.length - 1].color === fromTube[fromTube.length - 1].color))
+      ) {
         // Save current state for undo
-        setMoveHistory((prev) => [...prev, [...tubes]])
+        setMoveHistory((prev) => [...prev, JSON.parse(JSON.stringify(tubes))])
 
         // Move top liquid
-        const newTubes = [...tubes]
+        const newTubes = JSON.parse(JSON.stringify(tubes))
         const liquid = newTubes[selectedTube].pop()
         newTubes[tubeIndex].push(liquid)
 
         setTubes(newTubes)
 
         // Check if level is complete
-        const isComplete = checkLevelComplete(newTubes)
-        if (isComplete) {
-          setGameState((prev) => ({
-            ...prev,
-            levelsCompleted: prev.levelsCompleted + 1,
-            showLevelComplete: true,
-          }))
-        }
+        await checkLevelCompletion(newTubes)
       }
       setSelectedTube(null)
     }
   }
 
-  const checkLevelComplete = (currentTubes) => {
-    // Simple completion check - all tubes either empty or contain same color
-    return currentTubes.every((tube) => {
-      if (tube.length === 0) return true
-      const firstColor = tube[0].color
-      return tube.every((liquid) => liquid.color === firstColor)
-    })
-  }
-
   const canClaimReward = Math.floor(gameState.levelsCompleted / 5) > gameState.lastRewardClaimedSet
   const canUnlockNft = fluorBalance >= 10
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen relative overflow-hidden">
+        <ParticleBackground />
+        <Header />
+        <main className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-400 mx-auto mb-4"></div>
+            <p className="text-white text-xl">Loading Laboratory...</p>
+            <p className="text-gray-400 text-sm mt-2">Preparing Level {gameState.currentLevel}</p>
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -218,6 +219,9 @@ function GameArenaContent() {
           <div className="text-center mb-6 md:mb-8">
             <h1 className="text-2xl md:text-4xl font-bold text-white mb-2">Laboratory Arena</h1>
             <p className="text-green-400 text-base md:text-lg">Level {gameState.currentLevel}</p>
+            {isCheckingCompletion && (
+              <p className="text-yellow-400 text-sm mt-2 animate-pulse">Analyzing solution...</p>
+            )}
           </div>
 
           <GameBoard tubes={tubes} selectedTube={selectedTube} onTubeClick={handleTubeClick} />
