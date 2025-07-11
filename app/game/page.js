@@ -74,7 +74,7 @@ function GameArenaContent() {
     }
   }
 
-  const checkLevelCompletion = async (currentTubes) => {
+  const handleSubmit = async () => {
     setIsCheckingCompletion(true)
     try {
       const response = await fetch("/api/game/check-completion", {
@@ -82,7 +82,7 @@ function GameArenaContent() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ tubes: currentTubes }),
+        body: JSON.stringify({ tubes: tubes }),
       })
 
       const data = await response.json()
@@ -93,12 +93,13 @@ function GameArenaContent() {
           levelsCompleted: prev.levelsCompleted + 1,
           showLevelComplete: true,
         }))
-        return true
+      } else {
+        // Show feedback that the level is not complete
+        alert("Level not complete yet! Keep sorting the liquids.")
       }
-      return false
     } catch (error) {
       console.error("Error checking completion:", error)
-      return false
+      alert("Error checking completion. Please try again.")
     } finally {
       setIsCheckingCompletion(false)
     }
@@ -152,7 +153,7 @@ function GameArenaContent() {
     }
   }
 
-  const handleTubeClick = async (tubeIndex) => {
+  const handleTubeClick = (tubeIndex) => {
     if (isCheckingCompletion) return // Prevent clicks during completion check
 
     if (selectedTube === null) {
@@ -182,9 +183,6 @@ function GameArenaContent() {
         newTubes[tubeIndex].push(liquid)
 
         setTubes(newTubes)
-
-        // Check if level is complete
-        await checkLevelCompletion(newTubes)
       }
       setSelectedTube(null)
     }
@@ -231,9 +229,11 @@ function GameArenaContent() {
             onUndo={undoMove}
             onClaimReward={claimReward}
             onUnlockNft={unlockNft}
+            onSubmit={handleSubmit}
             canClaimReward={canClaimReward}
             canUnlockNft={canUnlockNft}
             canUndo={moveHistory.length > 0}
+            isCheckingCompletion={isCheckingCompletion}
           />
         </div>
       </main>

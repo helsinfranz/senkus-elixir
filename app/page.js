@@ -17,70 +17,77 @@ export default function HomePage() {
 
       <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-20">
         <div className="text-center max-w-6xl mx-auto">
-          {/* Hero Scientific Setup */}
+          {/* Hero Flask Image */}
           <div className="mb-6 md:mb-8 relative">
-            <div className="w-40 h-56 md:w-56 md:h-72 mx-auto relative">
-              {/* Laboratory Stand */}
-              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2 h-32 md:h-40 bg-gradient-to-b from-gray-600 to-gray-800 rounded-t"></div>
-              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 -translate-x-8 w-16 md:w-20 h-2 bg-gradient-to-r from-gray-700 to-gray-800 rounded"></div>
-
-              {/* Clamp */}
-              <div className="absolute top-16 md:top-20 right-8 md:right-12 w-3 h-8 bg-gradient-to-b from-gray-600 to-gray-700 rounded"></div>
-              <div className="absolute top-20 md:top-24 right-6 md:right-10 w-2 h-2 bg-gray-500 rounded-full"></div>
-
-              {/* Main Beaker */}
+            <div className="w-32 h-48 md:w-48 md:h-64 mx-auto relative">
+              {/* Outer Glow Effect */}
+              <div className="absolute inset-0 bg-gradient-to-b from-green-500/30 via-green-400/40 to-green-300/50 rounded-full blur-3xl animate-pulse"></div>
               <div
-                className="absolute bottom-8 md:bottom-12 left-1/2 transform -translate-x-1/2 w-16 md:w-20 h-28 md:h-36 bg-gradient-to-b from-gray-200/10 via-gray-100/20 to-gray-200/30 border-2 border-gray-300/40 backdrop-blur-sm"
-                style={{
-                  clipPath: "polygon(15% 0%, 85% 0%, 90% 100%, 10% 100%)",
-                  borderRadius: "0 0 8px 8px",
-                }}
-              >
-                {/* Glowing Liquid */}
+                className="absolute inset-0 bg-gradient-to-b from-transparent via-green-500/20 to-green-400/40 rounded-full blur-xl animate-pulse"
+                style={{ animationDelay: "0.5s" }}
+              ></div>
+
+              <div className="relative w-full h-full">
+                {/* Flask Neck */}
+                {/* <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-4 md:w-6 h-12 md:h-16 bg-gradient-to-b from-gray-700/80 to-gray-800/80 border-2 border-gray-600/50 backdrop-blur-sm shadow-2xl"> */}
+                  {/* <div className="absolute top-0 left-0 right-0 h-1 md:h-2 bg-gray-600/80 rounded-t"></div> */}
+                  {/* Neck Glow */}
+                  {/* <div className="absolute inset-0 bg-gradient-to-b from-green-400/20 to-transparent rounded-t"></div> */}
+                {/* </div> */}
+
+                {/* Animated Drops */}
+                {/* <div
+                  className="absolute top-12 md:top-16 left-1/2 transform -translate-x-1/2 w-1.5 md:w-2 h-1.5 md:h-2 bg-green-400 rounded-full animate-bounce shadow-lg"
+                  style={{
+                    animationDuration: "2s",
+                    animationDelay: "0.5s",
+                    boxShadow: "0 0 10px rgba(34, 197, 94, 0.8)",
+                  }}
+                ></div> */}
+                {/* <div
+                  className="absolute top-8 md:top-12 left-1/2 transform -translate-x-1/2 translate-x-1 w-1 md:w-1.5 h-1 md:h-1.5 bg-green-300 rounded-full animate-bounce shadow-md"
+                  style={{
+                    animationDuration: "2.3s",
+                    animationDelay: "1s",
+                    boxShadow: "0 0 8px rgba(34, 197, 94, 0.6)",
+                  }}
+                ></div>
                 <div
-                  className="absolute bottom-1 left-1 right-1 h-20 md:h-24 bg-gradient-to-t from-green-400 via-green-300 to-green-200 opacity-90"
-                  style={{ clipPath: "polygon(5% 0%, 95% 0%, 90% 100%, 10% 100%)" }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-white/50"></div>
-                  {/* Bubbles */}
-                  <div className="absolute top-2 left-3 w-1 h-1 bg-white/60 rounded-full animate-pulse"></div>
-                  <div
-                    className="absolute top-6 right-3 w-0.5 h-0.5 bg-white/70 rounded-full animate-pulse"
-                    style={{ animationDelay: "0.3s" }}
-                  ></div>
-                  <div
-                    className="absolute top-10 left-5 w-0.5 h-0.5 bg-white/50 rounded-full animate-pulse"
-                    style={{ animationDelay: "0.6s" }}
-                  ></div>
+                  className="absolute top-6 md:top-10 left-1/2 transform -translate-x-1/2 -translate-x-1 w-1 md:w-1.5 h-1 md:h-1.5 bg-green-200 rounded-full animate-bounce shadow-sm"
+                  style={{
+                    animationDuration: "2.7s",
+                    animationDelay: "1.5s",
+                    boxShadow: "0 0 6px rgba(34, 197, 94, 0.4)",
+                  }}
+                ></div> */}
+
+                {/* Flask Body */}
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-20 md:w-24 h-32 md:h-40 bg-gradient-to-b from-gray-800/80 to-gray-900/90 rounded-b-full border-2 border-gray-600/50 backdrop-blur-sm shadow-2xl">
+                  {/* Liquid with Enhanced Glow */}
+                  <div className="absolute bottom-2 left-2 right-2 h-20 md:h-24 bg-gradient-to-t from-green-400 via-green-300 to-green-200 rounded-b-full opacity-90 animate-pulse shadow-inner">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-b-full"></div>
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-white/60 rounded-full"></div>
+                    {/* Liquid Glow Effect */}
+                    <div className="absolute inset-0 bg-green-400/30 rounded-b-full blur-sm"></div>
+                    {/* Bubbles */}
+                    <div className="absolute top-2 left-3 w-1 h-1 bg-white/70 rounded-full animate-pulse shadow-sm"></div>
+                    <div
+                      className="absolute top-6 right-3 w-0.5 h-0.5 bg-white/80 rounded-full animate-pulse shadow-sm"
+                      style={{ animationDelay: "0.3s" }}
+                    ></div>
+                    <div
+                      className="absolute top-10 left-5 w-0.5 h-0.5 bg-white/60 rounded-full animate-pulse shadow-sm"
+                      style={{ animationDelay: "0.6s" }}
+                    ></div>
+                  </div>
+
+                  {/* Flask Body Glow */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-green-400/10 via-green-300/20 to-green-400/30 rounded-b-full"></div>
                 </div>
 
-                {/* Beaker Spout */}
-                <div className="absolute -top-2 left-0 w-4 h-3 bg-gradient-to-r from-gray-200/20 to-gray-300/30 border border-gray-300/40 rounded-tl-lg"></div>
-
-                {/* Glass Reflection */}
-                <div
-                  className="absolute inset-0 bg-gradient-to-r from-white/15 via-transparent to-white/10 pointer-events-none"
-                  style={{ clipPath: "polygon(15% 0%, 85% 0%, 90% 100%, 10% 100%)" }}
-                ></div>
+                {/* Glass reflection */}
+                {/* <div className="absolute inset-0 bg-gradient-to-r from-white/15 via-transparent to-white/10 rounded-b-full pointer-events-none"></div> */}
               </div>
-
-              {/* Animated Drops */}
-              <div className="absolute top-12 md:top-16 left-1/2 transform -translate-x-1/2">
-                <div
-                  className="w-2 h-2 bg-green-400 rounded-full animate-bounce opacity-80"
-                  style={{ animationDuration: "2s", animationDelay: "0s" }}
-                ></div>
-              </div>
-              <div className="absolute top-8 md:top-12 left-1/2 transform -translate-x-1/2 translate-x-1">
-                <div
-                  className="w-1.5 h-1.5 bg-green-300 rounded-full animate-bounce opacity-60"
-                  style={{ animationDuration: "2.5s", animationDelay: "0.7s" }}
-                ></div>
-              </div>
-
-              {/* Glow Effect */}
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-green-500/10 to-green-400/20 rounded-full blur-2xl"></div>
             </div>
           </div>
 

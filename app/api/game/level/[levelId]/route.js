@@ -3,7 +3,7 @@ import gameLevels from "@/data/game-levels.json"
 
 export async function GET(request, { params }) {
     try {
-        const { levelId } = await params
+        const { levelId } = await params // Await params to fix the error
 
         // Simulate network delay for loading state
         await new Promise((resolve) => setTimeout(resolve, 500))
