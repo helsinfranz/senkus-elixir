@@ -24,6 +24,7 @@ export const GAME_CONTROLLER_ABI = [
     "function claimInitialTokens()",
     "function payToPlay()",
     "function claimReward()",
+    "function recordLevelComplete(address playerAddress)",
     "function unlockNft()",
     "function getPlayerInfo(address player) view returns (uint256 fluorBalance, uint256 currentLevel, uint256 levelsCompleted, uint256 nftCount, uint256 claimableRewardSets)",
     "event LevelPlayed(address indexed player, uint256 currentLevel)",

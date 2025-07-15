@@ -94,6 +94,8 @@ function GameArenaContent() {
   const handleSubmit = async () => {
     setIsCheckingCompletion(true)
     try {
+      const currentLevel = playerData.currentLevel > 0 ? playerData.currentLevel : playerData.levelsCompleted + 1
+
       const response = await fetch("/api/game/record-completion", {
         method: "POST",
         headers: {
@@ -102,6 +104,7 @@ function GameArenaContent() {
         body: JSON.stringify({
           playerAddress: walletAddress,
           tubes: tubes,
+          levelId: currentLevel,
         }),
       })
 
@@ -114,8 +117,17 @@ function GameArenaContent() {
         }))
         // Reload player data to get updated stats
         await loadPlayerData()
+      } else if (data.isCompleted && !data.success) {
+        // Solution is correct but blockchain failed
+        alert(
+          `${data.message}\n\nYour progress has been saved locally, but blockchain recording failed. You can continue to the next level.`,
+        )
+        setGameState((prev) => ({
+          ...prev,
+          showLevelComplete: true,
+        }))
       } else {
-        alert("Level not complete yet! Keep sorting the liquids.")
+        alert(data.message || "Level not complete yet! Keep sorting the liquids.")
       }
     } catch (error) {
       console.error("Error checking completion:", error)

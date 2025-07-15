@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { ethers } from "ethers"
 import { CONTRACT_ADDRESSES, GAME_CONTROLLER_ABI } from "@/utils/contracts"
+import gameLevels from "@/data/game-levels.json"
 
 // This would be your backend private key for the owner account
 // In production, use environment variables and proper key management
@@ -8,10 +9,16 @@ const BACKEND_PRIVATE_KEY = process.env.BACKEND_PRIVATE_KEY || "your-private-key
 
 export async function POST(request) {
     try {
-        const { playerAddress, tubes } = await request.json()
+        const { playerAddress, tubes, levelId } = await request.json()
 
-        if (!playerAddress || !tubes || !Array.isArray(tubes)) {
+        if (!playerAddress || !tubes || !Array.isArray(tubes) || !levelId) {
             return NextResponse.json({ error: "Invalid request data" }, { status: 400 })
+        }
+
+        // Get the original level data
+        const originalLevel = gameLevels.levels[levelId.toString()]
+        if (!originalLevel) {
+            return NextResponse.json({ error: "Level not found" }, { status: 404 })
         }
 
         // Check if the game is completed
@@ -25,7 +32,18 @@ export async function POST(request) {
             })
         }
 
-        // Record completion on blockchain (only if completed)
+        // Validate that the solution matches the original level
+        const isValidSolution = validateSolution(tubes, originalLevel.tubes)
+
+        if (!isValidSolution) {
+            return NextResponse.json({
+                success: false,
+                isCompleted: false,
+                message: "Solution doesn't match the original level data!",
+            })
+        }
+
+        // Try to record completion on blockchain
         try {
             // Initialize provider and signer for backend
             const provider = new ethers.JsonRpcProvider("https://rpc.sepolia-api.lisk.com")
@@ -34,25 +52,29 @@ export async function POST(request) {
             // Create contract instance
             const gameController = new ethers.Contract(CONTRACT_ADDRESSES.GAME_CONTROLLER, GAME_CONTROLLER_ABI, signer)
 
-            // Record level completion on blockchain
+            // Record level completion on blockchain - using the correct function name
             const tx = await gameController.recordLevelComplete(playerAddress)
             await tx.wait()
 
             return NextResponse.json({
                 success: true,
                 isCompleted: true,
-                message: "Level completed successfully!",
+                message: "Level completed successfully and recorded on blockchain!",
                 transactionHash: tx.hash,
             })
         } catch (blockchainError) {
             console.error("Blockchain error:", blockchainError)
-            // Return success for game logic but note blockchain issue
-            return NextResponse.json({
-                success: true,
-                isCompleted: true,
-                message: "Level completed! (Blockchain recording pending)",
-                blockchainError: blockchainError.message,
-            })
+
+            // Return failure for blockchain recording
+            return NextResponse.json(
+                {
+                    success: false,
+                    isCompleted: true,
+                    message: "Your solution is correct, but we couldn't record it on the blockchain. Please try again.",
+                    blockchainError: blockchainError.message,
+                },
+                { status: 500 },
+            )
         }
     } catch (error) {
         console.error("Error recording completion:", error)
@@ -114,6 +136,42 @@ function checkGameCompletion(tubes) {
         }
 
         if (foundCount !== totalCount) {
+            return false
+        }
+    }
+
+    return true
+}
+
+function validateSolution(solvedTubes, originalTubes) {
+    // Count all liquids in the original level
+    const originalLiquids = {}
+    originalTubes.forEach((tube) => {
+        tube.forEach((liquid) => {
+            const key = `${liquid.color}-${liquid.id}`
+            originalLiquids[key] = (originalLiquids[key] || 0) + 1
+        })
+    })
+
+    // Count all liquids in the solved state
+    const solvedLiquids = {}
+    solvedTubes.forEach((tube) => {
+        tube.forEach((liquid) => {
+            const key = `${liquid.color}-${liquid.id}`
+            solvedLiquids[key] = (solvedLiquids[key] || 0) + 1
+        })
+    })
+
+    // Check if the counts match exactly
+    const originalKeys = Object.keys(originalLiquids).sort()
+    const solvedKeys = Object.keys(solvedLiquids).sort()
+
+    if (originalKeys.length !== solvedKeys.length) {
+        return false
+    }
+
+    for (let i = 0; i < originalKeys.length; i++) {
+        if (originalKeys[i] !== solvedKeys[i] || originalLiquids[originalKeys[i]] !== solvedLiquids[originalKeys[i]]) {
             return false
         }
     }
