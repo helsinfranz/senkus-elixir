@@ -11,13 +11,20 @@ import RouteGuard from "@/components/route-guard"
 import { useWallet } from "@/contexts/wallet-context"
 
 function GameArenaContent() {
-  const { fluorBalance, setFluorBalance, nftCount, setNftCount } = useWallet()
+  const {
+    fluorBalance,
+    nftCount,
+    playerData,
+    isLoading: walletLoading,
+    claimInitialTokens,
+    payToPlay,
+    claimReward,
+    unlockNft,
+    loadPlayerData,
+    walletAddress,
+  } = useWallet()
 
   const [gameState, setGameState] = useState({
-    currentLevel: 1,
-    levelsCompleted: 0,
-    lastRewardClaimedSet: 0,
-    isFirstVisit: true,
     showLevelComplete: false,
     showInitialTokens: false,
   })
@@ -29,15 +36,25 @@ function GameArenaContent() {
   const [isCheckingCompletion, setIsCheckingCompletion] = useState(false)
 
   useEffect(() => {
-    loadLevel(gameState.currentLevel)
-  }, [gameState.currentLevel])
+    if (playerData.currentLevel > 0) {
+      loadLevel(playerData.currentLevel)
+    } else if (playerData.levelsCompleted > 0) {
+      loadLevel(playerData.levelsCompleted + 1)
+    } else {
+      loadLevel(1)
+    }
+  }, [playerData.currentLevel, playerData.levelsCompleted])
 
   useEffect(() => {
     // Show initial tokens modal for first-time players
-    if (gameState.isFirstVisit && fluorBalance === 0) {
+    // Only show if they haven't claimed initial tokens AND they have 0 balance AND wallet is not loading
+    if (!playerData.hasClaimedInitialTokens && fluorBalance === 0 && !walletLoading) {
       setGameState((prev) => ({ ...prev, showInitialTokens: true }))
+    } else {
+      // Hide the modal if they have claimed tokens or have balance
+      setGameState((prev) => ({ ...prev, showInitialTokens: false }))
     }
-  }, [])
+  }, [playerData.hasClaimedInitialTokens, fluorBalance, walletLoading])
 
   const loadLevel = async (levelId) => {
     setIsLoading(true)
@@ -77,12 +94,15 @@ function GameArenaContent() {
   const handleSubmit = async () => {
     setIsCheckingCompletion(true)
     try {
-      const response = await fetch("/api/game/check-completion", {
+      const response = await fetch("/api/game/record-completion", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ tubes: tubes }),
+        body: JSON.stringify({
+          playerAddress: walletAddress,
+          tubes: tubes,
+        }),
       })
 
       const data = await response.json()
@@ -90,11 +110,11 @@ function GameArenaContent() {
       if (data.success && data.isCompleted) {
         setGameState((prev) => ({
           ...prev,
-          levelsCompleted: prev.levelsCompleted + 1,
           showLevelComplete: true,
         }))
+        // Reload player data to get updated stats
+        await loadPlayerData()
       } else {
-        // Show feedback that the level is not complete
         alert("Level not complete yet! Keep sorting the liquids.")
       }
     } catch (error) {
@@ -105,44 +125,38 @@ function GameArenaContent() {
     }
   }
 
-  const claimInitialTokens = () => {
-    setFluorBalance(5)
-    setGameState((prev) => ({
-      ...prev,
-      isFirstVisit: false,
-      showInitialTokens: false,
-    }))
+  const handleClaimInitialTokens = async () => {
+    const success = await claimInitialTokens()
+    if (success) {
+      // The modal will automatically hide due to the useEffect watching hasClaimedInitialTokens
+      console.log("Initial tokens claimed successfully")
+    }
   }
 
-  const payToPlay = () => {
-    if (fluorBalance > 0) {
-      setFluorBalance(fluorBalance - 1)
+  const handlePayToPlay = async () => {
+    const success = await payToPlay()
+    if (success) {
       setGameState((prev) => ({
         ...prev,
-        currentLevel: prev.currentLevel + 1,
         showLevelComplete: false,
       }))
+      // Load the next level
+      const nextLevel = playerData.levelsCompleted + 1
+      await loadLevel(nextLevel)
     }
   }
 
-  const claimReward = () => {
-    const rewardAmount = 2
-    setFluorBalance(fluorBalance + rewardAmount)
-    setGameState((prev) => ({
-      ...prev,
-      lastRewardClaimedSet: Math.floor(prev.levelsCompleted / 5),
-    }))
+  const handleClaimReward = async () => {
+    await claimReward()
   }
 
-  const unlockNft = () => {
-    if (fluorBalance >= 10) {
-      setFluorBalance(fluorBalance - 10)
-      setNftCount(nftCount + 1)
-    }
+  const handleUnlockNft = async () => {
+    await unlockNft()
   }
 
   const resetGame = () => {
-    loadLevel(gameState.currentLevel)
+    const currentLevel = playerData.currentLevel > 0 ? playerData.currentLevel : playerData.levelsCompleted + 1
+    loadLevel(currentLevel)
   }
 
   const undoMove = () => {
@@ -154,18 +168,15 @@ function GameArenaContent() {
   }
 
   const handleTubeClick = (tubeIndex) => {
-    if (isCheckingCompletion) return // Prevent clicks during completion check
+    if (isCheckingCompletion || walletLoading) return
 
     if (selectedTube === null) {
-      // Select tube if it has liquid
       if (tubes[tubeIndex].length > 0) {
         setSelectedTube(tubeIndex)
       }
     } else if (selectedTube === tubeIndex) {
-      // Deselect if clicking same tube
       setSelectedTube(null)
     } else {
-      // Pour liquid
       const fromTube = tubes[selectedTube]
       const toTube = tubes[tubeIndex]
 
@@ -174,10 +185,8 @@ function GameArenaContent() {
         (toTube.length === 0 ||
           (toTube.length < 4 && toTube[toTube.length - 1].color === fromTube[fromTube.length - 1].color))
       ) {
-        // Save current state for undo
         setMoveHistory((prev) => [...prev, JSON.parse(JSON.stringify(tubes))])
 
-        // Move top liquid
         const newTubes = JSON.parse(JSON.stringify(tubes))
         const liquid = newTubes[selectedTube].pop()
         newTubes[tubeIndex].push(liquid)
@@ -188,10 +197,11 @@ function GameArenaContent() {
     }
   }
 
-  const canClaimReward = Math.floor(gameState.levelsCompleted / 5) > gameState.lastRewardClaimedSet
+  const canClaimReward = playerData.claimableRewardSets > 0
   const canUnlockNft = fluorBalance >= 10
+  const currentLevel = playerData.currentLevel > 0 ? playerData.currentLevel : playerData.levelsCompleted + 1
 
-  if (isLoading) {
+  if (isLoading || walletLoading) {
     return (
       <div className="min-h-screen relative overflow-hidden">
         <ParticleBackground />
@@ -200,7 +210,7 @@ function GameArenaContent() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-400 mx-auto mb-4"></div>
             <p className="text-white text-xl">Loading Laboratory...</p>
-            <p className="text-gray-400 text-sm mt-2">Preparing Level {gameState.currentLevel}</p>
+            <p className="text-gray-400 text-sm mt-2">Preparing Level {currentLevel}</p>
           </div>
         </main>
       </div>
@@ -216,7 +226,13 @@ function GameArenaContent() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-6 md:mb-8">
             <h1 className="text-2xl md:text-4xl font-bold text-white mb-2">Laboratory Arena</h1>
-            <p className="text-green-400 text-base md:text-lg">Level {gameState.currentLevel}</p>
+            <p className="text-green-400 text-base md:text-lg">Level {currentLevel}</p>
+            <div className="text-sm text-gray-400 mt-2">
+              <p>Levels Completed: {playerData.levelsCompleted}</p>
+              {playerData.currentLevel > 0 && (
+                <p className="text-yellow-400">Currently Playing Level {playerData.currentLevel}</p>
+              )}
+            </div>
             {isCheckingCompletion && (
               <p className="text-yellow-400 text-sm mt-2 animate-pulse">Analyzing solution...</p>
             )}
@@ -227,8 +243,8 @@ function GameArenaContent() {
           <GameControls
             onReset={resetGame}
             onUndo={undoMove}
-            onClaimReward={claimReward}
-            onUnlockNft={unlockNft}
+            onClaimReward={handleClaimReward}
+            onUnlockNft={handleUnlockNft}
             onSubmit={handleSubmit}
             canClaimReward={canClaimReward}
             canUnlockNft={canUnlockNft}
@@ -238,9 +254,13 @@ function GameArenaContent() {
         </div>
       </main>
 
-      {gameState.showInitialTokens && <InitialTokensModal onClaim={claimInitialTokens} />}
+      {gameState.showInitialTokens && (
+        <InitialTokensModal onClaim={handleClaimInitialTokens} isLoading={walletLoading} />
+      )}
 
-      {gameState.showLevelComplete && <LevelCompleteModal onNextLevel={payToPlay} canAfford={fluorBalance > 0} />}
+      {gameState.showLevelComplete && (
+        <LevelCompleteModal onNextLevel={handlePayToPlay} canAfford={fluorBalance >= 1} isLoading={walletLoading} />
+      )}
     </div>
   )
 }

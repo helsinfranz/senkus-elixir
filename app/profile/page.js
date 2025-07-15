@@ -9,27 +9,20 @@ import { Badge } from "@/components/ui/badge"
 import { useWallet } from "@/contexts/wallet-context"
 
 function ProfileContent() {
-  const { walletAddress, fluorBalance, nftCount } = useWallet()
+  const { walletAddress, fluorBalance, nftCount, playerData, isLoading } = useWallet()
 
-  const [userStats] = useState({
-    levelsCompleted: 23,
-  })
-
+  // Mock NFT data - you mentioned to ignore the NFT display for now
   const [nfts] = useState([
     {
       id: 1,
       name: "Atomic Structure Blueprint",
-      image: "/placeholder.svg?height=300&width=300",
       rarity: "Rare",
-      rarityColor: "blue",
       description: "A detailed blueprint of atomic structures discovered in the Kingdom of Science.",
     },
     {
       id: 2,
       name: "Chemical Formula Codex",
-      image: "/placeholder.svg?height=300&width=300",
       rarity: "Epic",
-      rarityColor: "purple",
       description: "Ancient formulas for creating advanced compounds and materials.",
     },
   ])
@@ -47,6 +40,21 @@ function ProfileContent() {
     return styles[rarity] || styles.Common
   }
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen relative overflow-hidden">
+        <ParticleBackground />
+        <Header />
+        <main className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-400 mx-auto mb-4"></div>
+            <p className="text-white text-xl">Loading Profile...</p>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       <ParticleBackground />
@@ -57,8 +65,8 @@ function ProfileContent() {
           {/* Profile Header */}
           <div className="text-center mb-8 md:mb-12">
             <h1 className="text-2xl md:text-4xl font-bold text-white mb-4">Personal Laboratory</h1>
-            <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-lg p-4 md:p-6 max-w-2xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+            <div className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 rounded-lg p-4 md:p-6 max-w-3xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
                 <div>
                   <p className="text-gray-400 text-xs md:text-sm">Scientist ID</p>
                   <p className="text-white font-mono text-sm md:text-lg break-all">
@@ -69,11 +77,31 @@ function ProfileContent() {
                 </div>
                 <div>
                   <p className="text-gray-400 text-xs md:text-sm">Experiments Completed</p>
-                  <p className="text-green-400 font-bold text-xl md:text-2xl">{userStats.levelsCompleted}</p>
+                  <p className="text-green-400 font-bold text-xl md:text-2xl">{playerData.levelsCompleted}</p>
                 </div>
                 <div>
                   <p className="text-gray-400 text-xs md:text-sm">FLUOR Balance</p>
-                  <p className="text-blue-400 font-bold text-xl md:text-2xl">{fluorBalance}</p>
+                  <p className="text-blue-400 font-bold text-xl md:text-2xl">{fluorBalance.toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs md:text-sm">NFT Blueprints</p>
+                  <p className="text-purple-400 font-bold text-xl md:text-2xl">{nftCount}</p>
+                </div>
+              </div>
+
+              {/* Additional Stats */}
+              <div className="mt-4 pt-4 border-t border-gray-700/50">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
+                  <div>
+                    <p className="text-gray-400 text-xs md:text-sm">Current Level</p>
+                    <p className="text-yellow-400 font-bold text-lg">
+                      {playerData.currentLevel > 0 ? playerData.currentLevel : "Ready for Next"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400 text-xs md:text-sm">Claimable Rewards</p>
+                    <p className="text-orange-400 font-bold text-lg">{playerData.claimableRewardSets} Sets</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -85,7 +113,7 @@ function ProfileContent() {
               Kingdom of Science Blueprints
             </h2>
 
-            {nfts.length === 0 ? (
+            {nftCount === 0 ? (
               <div className="text-center py-8 md:py-12">
                 <p className="text-gray-400 text-base md:text-lg">No blueprints discovered yet.</p>
                 <p className="text-gray-500 mt-2 text-sm md:text-base">
@@ -94,7 +122,7 @@ function ProfileContent() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {nfts.map((nft) => (
+                {nfts.slice(0, nftCount).map((nft) => (
                   <Card
                     key={nft.id}
                     className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 hover:border-green-500/50 transition-all duration-300 cursor-pointer transform hover:scale-105"
