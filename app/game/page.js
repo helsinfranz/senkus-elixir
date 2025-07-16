@@ -29,6 +29,7 @@ function GameArenaContent() {
     showInitialTokens: false,
     needsPayment: false,
     isPayingToPlay: false,
+    isClaimingReward: false,
   })
 
   const [currentLevelId, setCurrentLevelId] = useState(1)
@@ -182,7 +183,16 @@ function GameArenaContent() {
   }
 
   const handleClaimReward = async () => {
-    await claimReward()
+    setGameState((prev) => ({ ...prev, isClaimingReward: true }))
+    const success = await claimReward()
+    if (success) {
+      await loadPlayerData()
+      // After claiming rewards, check if user can now afford to play
+      setTimeout(() => {
+        determineCurrentLevel()
+      }, 1000)
+    }
+    setGameState((prev) => ({ ...prev, isClaimingReward: false }))
   }
 
   const handleUnlockNft = async () => {
@@ -311,13 +321,38 @@ function GameArenaContent() {
                   <span className="text-gray-400">Your Balance:</span>
                   <span className="text-blue-400 font-bold text-xl">{fluorBalance.toFixed(2)} FLUOR</span>
                 </div>
+                {canClaimReward && (
+                  <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-600/50">
+                    <span className="text-gray-400">Claimable Rewards:</span>
+                    <span className="text-green-400 font-bold text-xl">{playerData.claimableRewardSets} Sets</span>
+                  </div>
+                )}
               </div>
 
+              {/* Claim Rewards Section */}
+              {canClaimReward && (
+                <div className="mb-4">
+                  <button
+                    onClick={handleClaimReward}
+                    disabled={gameState.isClaimingReward}
+                    className="w-full text-lg py-3 font-semibold rounded-lg transition-all duration-300 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white mb-3"
+                  >
+                    {gameState.isClaimingReward
+                      ? "Claiming Rewards..."
+                      : `Claim ${playerData.claimableRewardSets} Reward Sets`}
+                  </button>
+                  <p className="text-green-400 text-sm mb-4">
+                    Each reward set gives you FLUOR tokens to continue playing!
+                  </p>
+                </div>
+              )}
+
+              {/* Pay to Play Button */}
               <button
                 onClick={handlePayToPlayCurrent}
                 disabled={fluorBalance < 1 || gameState.isPayingToPlay}
                 className={`w-full text-lg py-3 font-semibold rounded-lg transition-all duration-300 ${fluorBalance >= 1 && !gameState.isPayingToPlay
-                  ? "bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-400 hover:to-blue-400 text-white"
+                  ? "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white"
                   : "bg-gray-600/50 text-gray-400 cursor-not-allowed"
                   }`}
               >
@@ -328,9 +363,15 @@ function GameArenaContent() {
                     : "Insufficient FLUOR"}
               </button>
 
-              {fluorBalance < 1 && (
+              {fluorBalance < 1 && !canClaimReward && (
                 <p className="text-red-400 text-sm mt-4">
                   You need more FLUOR tokens to play. Complete previous levels or claim rewards to earn more.
+                </p>
+              )}
+
+              {fluorBalance < 1 && canClaimReward && (
+                <p className="text-yellow-400 text-sm mt-4">
+                  Claim your reward sets above to get FLUOR tokens and continue playing!
                 </p>
               )}
             </div>
@@ -377,9 +418,9 @@ function GameArenaContent() {
         </div>
       </main>
 
-      {/* {gameState.showLevelComplete && (
+      {gameState.showLevelComplete && (
         <LevelCompleteModal onNextLevel={handlePayToPlay} canAfford={fluorBalance >= 1} isLoading={walletLoading} />
-      )} */}
+      )}
     </div>
   )
 }
