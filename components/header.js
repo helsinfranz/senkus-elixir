@@ -21,43 +21,42 @@ export default function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-gray-900/20 backdrop-blur-md border-b border-green-500/30">
       <div className="max-w-7xl mx-auto px-4 h-14 md:h-16 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2 text-white hover:text-green-400 transition-colors">
-          <Atom className="w-6 h-6 md:w-8 md:h-8 text-green-400" />
-          <span className="text-lg md:text-xl font-bold hidden sm:block">Senku's Elixir</span>
-          <span className="text-lg md:text-xl font-bold sm:hidden">Senku</span>
-        </Link>
+        {/* Logo - Fixed width */}
+        <div className="flex items-center space-x-2 text-white hover:text-green-400 transition-colors w-48">
+          <Link href="/" className="flex items-center space-x-2">
+            <Atom className="w-6 h-6 md:w-8 md:h-8 text-green-400" />
+            <span className="text-lg md:text-xl font-bold hidden sm:block">Senku's Elixir</span>
+            <span className="text-lg md:text-xl font-bold sm:hidden">Senku</span>
+          </Link>
+        </div>
 
-        {/* Navigation */}
-        <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
+        {/* Navigation - Centered */}
+        <nav className="hidden md:flex items-center space-x-6 lg:space-x-8 absolute left-1/2 transform -translate-x-1/2">
           <Link
             href="/"
-            className={`text-sm font-medium transition-colors ${
-              isActivePage("/") ? "text-green-400" : "text-white hover:text-green-400"
-            }`}
+            className={`text-sm font-medium transition-colors ${isActivePage("/") ? "text-green-400" : "text-white hover:text-green-400"
+              }`}
           >
             Home
           </Link>
           <Link
             href="/game"
-            className={`text-sm font-medium transition-colors ${
-              isActivePage("/game") ? "text-green-400" : "text-white hover:text-green-400"
-            }`}
+            className={`text-sm font-medium transition-colors ${isActivePage("/game") ? "text-green-400" : "text-white hover:text-green-400"
+              }`}
           >
             Game Arena
           </Link>
           <Link
             href="/profile"
-            className={`text-sm font-medium transition-colors ${
-              isActivePage("/profile") ? "text-green-400" : "text-white hover:text-green-400"
-            }`}
+            className={`text-sm font-medium transition-colors ${isActivePage("/profile") ? "text-green-400" : "text-white hover:text-green-400"
+              }`}
           >
             Profile
           </Link>
         </nav>
 
-        {/* Wallet Widget */}
-        <div className="flex items-center">
+        {/* Wallet Widget - Fixed width */}
+        <div className="flex items-center justify-end w-48">
           {!isConnected ? (
             <Button
               onClick={connectWallet}

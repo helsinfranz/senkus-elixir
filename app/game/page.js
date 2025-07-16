@@ -27,7 +27,11 @@ function GameArenaContent() {
   const [gameState, setGameState] = useState({
     showLevelComplete: false,
     showInitialTokens: false,
+    needsPayment: false,
+    isPayingToPlay: false,
   })
+
+  const [currentLevelId, setCurrentLevelId] = useState(1)
 
   const [tubes, setTubes] = useState([])
   const [selectedTube, setSelectedTube] = useState(null)
@@ -36,25 +40,36 @@ function GameArenaContent() {
   const [isCheckingCompletion, setIsCheckingCompletion] = useState(false)
 
   useEffect(() => {
-    if (playerData.currentLevel > 0) {
-      loadLevel(playerData.currentLevel)
-    } else if (playerData.levelsCompleted > 0) {
-      loadLevel(playerData.levelsCompleted + 1)
-    } else {
-      loadLevel(1)
+    if (!walletLoading && playerData) {
+      determineCurrentLevel()
     }
-  }, [playerData.currentLevel, playerData.levelsCompleted])
+  }, [playerData, walletLoading])
 
-  useEffect(() => {
-    // Show initial tokens modal for first-time players
-    // Only show if they haven't claimed initial tokens AND they have 0 balance AND wallet is not loading
-    if (!playerData.hasClaimedInitialTokens && fluorBalance === 0 && !walletLoading) {
-      setGameState((prev) => ({ ...prev, showInitialTokens: true }))
+  const determineCurrentLevel = () => {
+    let levelToLoad = 1
+    let needsPayment = false
+
+    if (playerData.currentLevel > 0) {
+      // User has paid for a level and is currently playing it
+      levelToLoad = playerData.currentLevel
+      needsPayment = false
+    } else if (playerData.levelsCompleted > 0) {
+      // User has completed some levels, next level needs payment
+      levelToLoad = playerData.levelsCompleted + 1
+      needsPayment = true
     } else {
-      // Hide the modal if they have claimed tokens or have balance
-      setGameState((prev) => ({ ...prev, showInitialTokens: false }))
+      // New user, first level needs payment
+      levelToLoad = 1
+      needsPayment = true
     }
-  }, [playerData.hasClaimedInitialTokens, fluorBalance, walletLoading])
+
+    setCurrentLevelId(levelToLoad)
+    setGameState((prev) => ({ ...prev, needsPayment }))
+
+    if (!needsPayment) {
+      loadLevel(levelToLoad)
+    }
+  }
 
   const loadLevel = async (levelId) => {
     setIsLoading(true)
@@ -94,8 +109,6 @@ function GameArenaContent() {
   const handleSubmit = async () => {
     setIsCheckingCompletion(true)
     try {
-      const currentLevel = playerData.currentLevel > 0 ? playerData.currentLevel : playerData.levelsCompleted + 1
-
       const response = await fetch("/api/game/record-completion", {
         method: "POST",
         headers: {
@@ -104,7 +117,7 @@ function GameArenaContent() {
         body: JSON.stringify({
           playerAddress: walletAddress,
           tubes: tubes,
-          levelId: currentLevel,
+          levelId: currentLevelId,
         }),
       })
 
@@ -118,14 +131,10 @@ function GameArenaContent() {
         // Reload player data to get updated stats
         await loadPlayerData()
       } else if (data.isCompleted && !data.success) {
-        // Solution is correct but blockchain failed
+        // Solution is correct but blockchain failed - don't allow progression
         alert(
-          `${data.message}\n\nYour progress has been saved locally, but blockchain recording failed. You can continue to the next level.`,
+          `Your solution is correct, but we couldn't record it on the blockchain. Please try submitting again to proceed to the next level.`,
         )
-        setGameState((prev) => ({
-          ...prev,
-          showLevelComplete: true,
-        }))
       } else {
         alert(data.message || "Level not complete yet! Keep sorting the liquids.")
       }
@@ -213,6 +222,22 @@ function GameArenaContent() {
   const canUnlockNft = fluorBalance >= 10
   const currentLevel = playerData.currentLevel > 0 ? playerData.currentLevel : playerData.levelsCompleted + 1
 
+  const handlePayToPlayCurrent = async () => {
+    setGameState((prev) => ({ ...prev, isPayingToPlay: true }))
+    const success = await payToPlay()
+    if (success) {
+      setGameState((prev) => ({
+        ...prev,
+        needsPayment: false,
+        isPayingToPlay: false,
+      }))
+      await loadLevel(currentLevelId)
+      await loadPlayerData()
+    } else {
+      setGameState((prev) => ({ ...prev, isPayingToPlay: false }))
+    }
+  }
+
   if (isLoading || walletLoading) {
     return (
       <div className="min-h-screen relative overflow-hidden">
@@ -222,7 +247,60 @@ function GameArenaContent() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-400 mx-auto mb-4"></div>
             <p className="text-white text-xl">Loading Laboratory...</p>
-            <p className="text-gray-400 text-sm mt-2">Preparing Level {currentLevel}</p>
+            <p className="text-gray-400 text-sm mt-2">Preparing Level {currentLevelId}</p>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // Show payment screen if user needs to pay for current level
+  if (gameState.needsPayment) {
+    return (
+      <div className="min-h-screen relative overflow-hidden">
+        <ParticleBackground />
+        <Header />
+        <main className="relative z-10 flex items-center justify-center min-h-screen px-4">
+          <div className="max-w-md mx-auto">
+            <div className="bg-gray-900/90 backdrop-blur-md border border-gray-700/50 rounded-lg p-8 text-center">
+              <div className="mb-6">
+                <div className="text-6xl mb-4">🧪</div>
+                <h2 className="text-3xl font-bold text-white mb-2">Level {currentLevelId}</h2>
+                <p className="text-gray-300">Ready to start your next experiment?</p>
+              </div>
+
+              <div className="bg-gray-800/50 rounded-lg p-4 mb-6">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Cost to Play:</span>
+                  <span className="text-yellow-400 font-bold text-xl">1 FLUOR</span>
+                </div>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-gray-400">Your Balance:</span>
+                  <span className="text-blue-400 font-bold text-xl">{fluorBalance.toFixed(2)} FLUOR</span>
+                </div>
+              </div>
+
+              <button
+                onClick={handlePayToPlayCurrent}
+                disabled={fluorBalance < 1 || gameState.isPayingToPlay}
+                className={`w-full text-lg py-3 font-semibold rounded-lg transition-all duration-300 ${fluorBalance >= 1 && !gameState.isPayingToPlay
+                    ? "bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-400 hover:to-blue-400 text-white"
+                    : "bg-gray-600/50 text-gray-400 cursor-not-allowed"
+                  }`}
+              >
+                {gameState.isPayingToPlay
+                  ? "Processing Payment..."
+                  : fluorBalance >= 1
+                    ? "Pay & Start Level"
+                    : "Insufficient FLUOR"}
+              </button>
+
+              {fluorBalance < 1 && (
+                <p className="text-red-400 text-sm mt-4">
+                  You need more FLUOR tokens to play. Complete previous levels or claim rewards to earn more.
+                </p>
+              )}
+            </div>
           </div>
         </main>
       </div>
@@ -238,7 +316,7 @@ function GameArenaContent() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-6 md:mb-8">
             <h1 className="text-2xl md:text-4xl font-bold text-white mb-2">Laboratory Arena</h1>
-            <p className="text-green-400 text-base md:text-lg">Level {currentLevel}</p>
+            <p className="text-green-400 text-base md:text-lg">Level {currentLevelId}</p>
             <div className="text-sm text-gray-400 mt-2">
               <p>Levels Completed: {playerData.levelsCompleted}</p>
               {playerData.currentLevel > 0 && (
