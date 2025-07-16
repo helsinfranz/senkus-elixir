@@ -45,6 +45,15 @@ function GameArenaContent() {
     }
   }, [playerData, walletLoading])
 
+  useEffect(() => {
+    // Show initial tokens modal for first-time players
+    // Only show if they haven't claimed initial tokens AND they have 0 balance AND wallet is not loading
+    if (!playerData.hasClaimedInitialTokens && fluorBalance === 0 && !walletLoading) {
+      setGameState((prev) => ({ ...prev, showInitialTokens: true }))
+    }
+    // Don't automatically hide the modal here - let the claim success handle it
+  }, [playerData.hasClaimedInitialTokens, fluorBalance, walletLoading])
+
   const determineCurrentLevel = () => {
     let levelToLoad = 1
     let needsPayment = false
@@ -149,8 +158,13 @@ function GameArenaContent() {
   const handleClaimInitialTokens = async () => {
     const success = await claimInitialTokens()
     if (success) {
-      // The modal will automatically hide due to the useEffect watching hasClaimedInitialTokens
-      console.log("Initial tokens claimed successfully")
+      // Explicitly hide the modal and reload player data
+      setGameState((prev) => ({ ...prev, showInitialTokens: false }))
+      await loadPlayerData()
+      // After claiming tokens, determine the current level
+      setTimeout(() => {
+        determineCurrentLevel()
+      }, 1000) // Small delay to ensure player data is updated
     }
   }
 
@@ -238,7 +252,7 @@ function GameArenaContent() {
     }
   }
 
-  if (isLoading || walletLoading) {
+  if ((isLoading || walletLoading) && !gameState.showInitialTokens && !gameState.needsPayment) {
     return (
       <div className="min-h-screen relative overflow-hidden">
         <ParticleBackground />
@@ -250,6 +264,25 @@ function GameArenaContent() {
             <p className="text-gray-400 text-sm mt-2">Preparing Level {currentLevelId}</p>
           </div>
         </main>
+      </div>
+    )
+  }
+
+  // Show initial tokens modal first if needed
+  if (gameState.showInitialTokens) {
+    return (
+      <div className="min-h-screen relative overflow-hidden">
+        <ParticleBackground />
+        <Header />
+        <main className="relative z-10 pt-20 pb-8 px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-6 md:mb-8">
+              <h1 className="text-2xl md:text-4xl font-bold text-white mb-2">Laboratory Arena</h1>
+              <p className="text-gray-400 text-base">Welcome to the Kingdom of Science!</p>
+            </div>
+          </div>
+        </main>
+        <InitialTokensModal onClaim={handleClaimInitialTokens} isLoading={walletLoading} />
       </div>
     )
   }
@@ -284,8 +317,8 @@ function GameArenaContent() {
                 onClick={handlePayToPlayCurrent}
                 disabled={fluorBalance < 1 || gameState.isPayingToPlay}
                 className={`w-full text-lg py-3 font-semibold rounded-lg transition-all duration-300 ${fluorBalance >= 1 && !gameState.isPayingToPlay
-                    ? "bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-400 hover:to-blue-400 text-white"
-                    : "bg-gray-600/50 text-gray-400 cursor-not-allowed"
+                  ? "bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-400 hover:to-blue-400 text-white"
+                  : "bg-gray-600/50 text-gray-400 cursor-not-allowed"
                   }`}
               >
                 {gameState.isPayingToPlay
@@ -344,13 +377,9 @@ function GameArenaContent() {
         </div>
       </main>
 
-      {gameState.showInitialTokens && (
-        <InitialTokensModal onClaim={handleClaimInitialTokens} isLoading={walletLoading} />
-      )}
-
-      {gameState.showLevelComplete && (
+      {/* {gameState.showLevelComplete && (
         <LevelCompleteModal onNextLevel={handlePayToPlay} canAfford={fluorBalance >= 1} isLoading={walletLoading} />
-      )}
+      )} */}
     </div>
   )
 }
