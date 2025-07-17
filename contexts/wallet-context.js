@@ -232,11 +232,11 @@ export function WalletProvider({ children }) {
       setIsLoading(true)
 
       // First approve the game controller to spend tokens
-      const approveTx = await contracts.fluoriteToken.approve(
-        contracts.gameController.target,
-        "1000000000000000000", // 1 FLUOR in wei
-      )
-      await approveTx.wait()
+      // const approveTx = await contracts.fluoriteToken.approve(
+      //   contracts.gameController.target,
+      //   "1000000000000000000", // 1 FLUOR in wei
+      // )
+      // await approveTx.wait()
 
       // Then pay to play
       const tx = await contracts.gameController.payToPlay()
