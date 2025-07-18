@@ -60,7 +60,7 @@ function ProfileContent() {
       <ParticleBackground />
       <Header />
 
-      <main className="relative z-10 pt-20 pb-8 px-4">
+      <main className="relative z-10 pt-24 pb-8 px-4">
         <div className="max-w-6xl mx-auto">
           {/* Profile Header */}
           <div className="text-center mb-8 md:mb-12">

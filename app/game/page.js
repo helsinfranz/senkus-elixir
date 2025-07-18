@@ -84,7 +84,7 @@ function GameArenaContent() {
   const loadLevel = async (levelId) => {
     setIsLoading(true)
     try {
-      const response = await fetch(`/api/game/level/${levelId}`)
+      const response = await fetch(`/api/game/level/${levelId}?playerAddress=${walletAddress}`)
       const data = await response.json()
 
       if (data.success) {
@@ -93,6 +93,12 @@ function GameArenaContent() {
         setMoveHistory([])
       } else {
         console.error("Failed to load level:", data.error)
+        if (data.error === "Unauthorized access to this level") {
+          alert("You don't have access to this level. Please complete previous levels first.")
+          // Redirect to appropriate level
+          await loadPlayerData()
+          return
+        }
         // Fallback to default level if API fails
         setTubes([
           [
@@ -195,8 +201,50 @@ function GameArenaContent() {
     setGameState((prev) => ({ ...prev, isClaimingReward: false }))
   }
 
+  // Calculate if NFT minting would cause a stuck situation
+  const calculateNftMintingSafety = () => {
+    const nftCost = 10
+    const levelCost = 1
+
+    if (fluorBalance < nftCost) {
+      return { canMint: false, reason: "Insufficient FLUOR for NFT minting" }
+    }
+
+    const balanceAfterMint = fluorBalance - nftCost
+    const levelsCompleted = playerData.levelsCompleted
+
+    // Calculate potential future rewards
+    // Reward formula: 5 + (completedSets * 1) where completedSets = floor(levelsCompleted / 5)
+    const currentRewardSets = Math.floor(levelsCompleted / 5)
+    const nextRewardAt = (currentRewardSets + 1) * 5
+    const levelsUntilNextReward = nextRewardAt - levelsCompleted
+
+    // If user can't afford to play until next reward, they'll be stuck
+    if (balanceAfterMint < levelsUntilNextReward * levelCost) {
+      const nextRewardAmount = 5 + currentRewardSets + 1 // Next reward will be 1 more than current
+      return {
+        canMint: false,
+        reason: `Minting NFT would leave you with ${balanceAfterMint.toFixed(2)} FLUOR. You need ${levelsUntilNextReward} FLUOR to reach your next reward (${nextRewardAmount} FLUOR at level ${nextRewardAt}).`,
+      }
+    }
+
+    return { canMint: true, reason: "Safe to mint NFT" }
+  }
+
   const handleUnlockNft = async () => {
-    await unlockNft()
+    const safety = calculateNftMintingSafety()
+    if (!safety.canMint) {
+      alert(`Cannot mint NFT: ${safety.reason}`)
+      return
+    }
+
+    if (
+      window.confirm(
+        `Are you sure you want to spend 10 FLUOR to mint an NFT? You'll have ${(fluorBalance - 10).toFixed(2)} FLUOR remaining.`,
+      )
+    ) {
+      await unlockNft()
+    }
   }
 
   const resetGame = () => {
@@ -243,7 +291,8 @@ function GameArenaContent() {
   }
 
   const canClaimReward = playerData.claimableRewardSets > 0
-  const canUnlockNft = fluorBalance >= 10
+  const nftSafety = calculateNftMintingSafety()
+  const canUnlockNft = nftSafety.canMint
   const currentLevel = playerData.currentLevel > 0 ? playerData.currentLevel : playerData.levelsCompleted + 1
 
   const handlePayToPlayCurrent = async () => {
@@ -284,7 +333,7 @@ function GameArenaContent() {
       <div className="min-h-screen relative overflow-hidden">
         <ParticleBackground />
         <Header />
-        <main className="relative z-10 pt-20 pb-8 px-4">
+        <main className="relative z-10 pt-24 pb-8 px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-6 md:mb-8">
               <h1 className="text-2xl md:text-4xl font-bold text-white mb-2">Laboratory Arena</h1>
@@ -352,8 +401,8 @@ function GameArenaContent() {
                 onClick={handlePayToPlayCurrent}
                 disabled={fluorBalance < 1 || gameState.isPayingToPlay}
                 className={`w-full text-lg py-3 font-semibold rounded-lg transition-all duration-300 ${fluorBalance >= 1 && !gameState.isPayingToPlay
-                  ? "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white"
-                  : "bg-gray-600/50 text-gray-400 cursor-not-allowed"
+                    ? "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white"
+                    : "bg-gray-600/50 text-gray-400 cursor-not-allowed"
                   }`}
               >
                 {gameState.isPayingToPlay
@@ -386,7 +435,7 @@ function GameArenaContent() {
       <ParticleBackground />
       <Header />
 
-      <main className="relative z-10 pt-20 pb-8 px-4">
+      <main className="relative z-10 pt-24 pb-8 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-6 md:mb-8">
             <h1 className="text-2xl md:text-4xl font-bold text-white mb-2">Laboratory Arena</h1>
