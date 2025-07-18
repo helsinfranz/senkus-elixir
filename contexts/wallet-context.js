@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect } from "react"
-import { getContracts, getSigner } from "@/utils/contracts"
+import { getContracts, getSigner, getProvider } from "@/utils/contracts"
 
 const WalletContext = createContext()
 
@@ -60,9 +60,9 @@ export function WalletProvider({ children }) {
 
   const initializeContracts = async () => {
     try {
-      const signer = await getSigner()
-      if (signer) {
-        const contractInstances = getContracts(signer)
+      const provider = getProvider()
+      if (provider) {
+        const contractInstances = getContracts(provider)
         setContracts(contractInstances)
       }
     } catch (error) {
@@ -81,7 +81,6 @@ export function WalletProvider({ children }) {
       }
 
       const playerInfo = await contracts.gameController.getPlayerInfo(walletAddress)
-      console.log("Player Info:", playerInfo)
 
       const fluorBalanceWei = Number(playerInfo.fluorBalance)
       const fluorBalanceEther = fluorBalanceWei / 1e18

@@ -34,10 +34,10 @@ export const GAME_CONTROLLER_ABI = [
 ]
 
 // Contract instances
-export const getContracts = (signer) => {
-    const fluoriteToken = new ethers.Contract(CONTRACT_ADDRESSES.FLUORITE_TOKEN, FLUORITE_TOKEN_ABI, signer)
-    const kingdomNFT = new ethers.Contract(CONTRACT_ADDRESSES.KINGDOM_NFT, KINGDOM_NFT_ABI, signer)
-    const gameController = new ethers.Contract(CONTRACT_ADDRESSES.GAME_CONTROLLER, GAME_CONTROLLER_ABI, signer)
+export const getContracts = (provider) => {
+    const fluoriteToken = new ethers.Contract(CONTRACT_ADDRESSES.FLUORITE_TOKEN, FLUORITE_TOKEN_ABI, provider)
+    const kingdomNFT = new ethers.Contract(CONTRACT_ADDRESSES.KINGDOM_NFT, KINGDOM_NFT_ABI, provider)
+    const gameController = new ethers.Contract(CONTRACT_ADDRESSES.GAME_CONTROLLER, GAME_CONTROLLER_ABI, provider)
 
     return {
         fluoriteToken,
@@ -48,10 +48,7 @@ export const getContracts = (signer) => {
 
 // Helper functions
 export const getProvider = () => {
-    if (typeof window !== "undefined" && window.ethereum) {
-        return new ethers.BrowserProvider(window.ethereum)
-    }
-    return null
+    return new ethers.JsonRpcProvider("https://rpc.sepolia-api.lisk.com")
 }
 
 export const getSigner = async () => {
