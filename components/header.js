@@ -3,8 +3,9 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Atom, Gem, FileText, LogOut } from "lucide-react"
+import { Gem, FileText, LogOut } from "lucide-react"
 import { useWallet } from "@/contexts/wallet-context"
+import Image from "next/image"
 
 export default function Header() {
   const { isConnected, walletAddress, fluorBalance, nftCount, connectWallet, disconnectWallet, isConnecting } =
@@ -23,8 +24,10 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 h-14 md:h-16 flex items-center justify-between">
         {/* Logo - Fixed width */}
         <div className="flex items-center space-x-2 text-white hover:text-green-400 transition-colors w-48">
-          <Link href="/" className="flex items-center space-x-2">
-            <Atom className="w-6 h-6 md:w-8 md:h-8 text-green-400" />
+          <Link href="/" className="flex items-center space-x-3">
+            <div className="relative w-8 h-8 md:w-10 md:h-10">
+              <Image src="/logo.png" alt="Senku's Elixir Logo" fill className="object-contain rounded-lg" priority />
+            </div>
             <span className="text-lg md:text-xl font-bold hidden sm:block">Senku's Elixir</span>
             <span className="text-lg md:text-xl font-bold sm:hidden">Senku</span>
           </Link>

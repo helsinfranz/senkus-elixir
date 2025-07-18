@@ -96,7 +96,7 @@ function GameArenaContent() {
         if (data.error === "Unauthorized access to this level") {
           alert("You don't have access to this level. Please complete previous levels first.")
           // Redirect to appropriate level
-          await loadPlayerData()
+          await loadPlayerData(true) // Force refresh
           return
         }
         // Fallback to default level if API fails
@@ -144,8 +144,8 @@ function GameArenaContent() {
           ...prev,
           showLevelComplete: true,
         }))
-        // Reload player data to get updated stats
-        await loadPlayerData()
+        // Force reload player data to get updated stats
+        await loadPlayerData(true)
       } else if (data.isCompleted && !data.success) {
         // Solution is correct but blockchain failed - don't allow progression
         alert(
@@ -167,11 +167,10 @@ function GameArenaContent() {
     if (success) {
       // Explicitly hide the modal and reload player data
       setGameState((prev) => ({ ...prev, showInitialTokens: false }))
-      await loadPlayerData()
       // After claiming tokens, determine the current level
       setTimeout(() => {
         determineCurrentLevel()
-      }, 1000) // Small delay to ensure player data is updated
+      }, 2000) // Longer delay to ensure blockchain state is updated
     }
   }
 
@@ -192,11 +191,10 @@ function GameArenaContent() {
     setGameState((prev) => ({ ...prev, isClaimingReward: true }))
     const success = await claimReward()
     if (success) {
-      await loadPlayerData()
       // After claiming rewards, check if user can now afford to play
       setTimeout(() => {
         determineCurrentLevel()
-      }, 1000)
+      }, 2000) // Longer delay to ensure blockchain state is updated
     }
     setGameState((prev) => ({ ...prev, isClaimingReward: false }))
   }
@@ -305,7 +303,6 @@ function GameArenaContent() {
         isPayingToPlay: false,
       }))
       await loadLevel(currentLevelId)
-      await loadPlayerData()
     } else {
       setGameState((prev) => ({ ...prev, isPayingToPlay: false }))
     }

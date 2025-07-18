@@ -70,12 +70,19 @@ export function WalletProvider({ children }) {
     }
   }
 
-  const loadPlayerData = async () => {
+  const loadPlayerData = async (forceRefresh = false) => {
     if (!contracts || !walletAddress) return
 
     setIsLoading(true)
     try {
+      // Add a small delay if forcing refresh to ensure blockchain state is updated
+      if (forceRefresh) {
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+      }
+
       const playerInfo = await contracts.gameController.getPlayerInfo(walletAddress)
+      console.log("Player Info:", playerInfo)
+
       const fluorBalanceWei = Number(playerInfo.fluorBalance)
       const fluorBalanceEther = fluorBalanceWei / 1e18
 
@@ -201,8 +208,8 @@ export function WalletProvider({ children }) {
         hasClaimedInitialTokens: true,
       }))
 
-      // Reload all player data from blockchain
-      await loadPlayerData()
+      // Reload all player data from blockchain with force refresh
+      await loadPlayerData(true)
 
       return true
     } catch (error) {
@@ -231,17 +238,10 @@ export function WalletProvider({ children }) {
     try {
       setIsLoading(true)
 
-      // First approve the game controller to spend tokens
-      // const approveTx = await contracts.fluoriteToken.approve(
-      //   contracts.gameController.target,
-      //   "1000000000000000000", // 1 FLUOR in wei
-      // )
-      // await approveTx.wait()
-
       // Then pay to play
       const tx = await contracts.gameController.payToPlay()
       await tx.wait()
-      await loadPlayerData()
+      await loadPlayerData(true) // Force refresh after payment
       return true
     } catch (error) {
       console.error("Error paying to play:", error)
@@ -259,7 +259,7 @@ export function WalletProvider({ children }) {
       setIsLoading(true)
       const tx = await contracts.gameController.claimReward()
       await tx.wait()
-      await loadPlayerData()
+      await loadPlayerData(true) // Force refresh after claiming
       return true
     } catch (error) {
       console.error("Error claiming reward:", error)
@@ -286,7 +286,7 @@ export function WalletProvider({ children }) {
       // Then unlock NFT
       const tx = await contracts.gameController.unlockNft()
       await tx.wait()
-      await loadPlayerData()
+      await loadPlayerData(true) // Force refresh after NFT unlock
       return true
     } catch (error) {
       console.error("Error unlocking NFT:", error)
