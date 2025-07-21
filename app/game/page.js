@@ -5,7 +5,7 @@ import Header from "@/components/header"
 import ParticleBackground from "@/components/particle-background"
 import GameBoard from "@/components/game-board"
 import GameControls from "@/components/game-controls"
-import LevelCompleteModal from "@/components/level-complete-modal"
+// import LevelCompleteModal from "@/components/level-complete-modal"
 import InitialTokensModal from "@/components/initial-tokens-modal"
 import RouteGuard from "@/components/route-guard"
 import { useWallet } from "@/contexts/wallet-context"
@@ -464,9 +464,9 @@ function GameArenaContent() {
         </div>
       </main>
 
-      {gameState.showLevelComplete && (
+      {/* {gameState.showLevelComplete && (
         <LevelCompleteModal onNextLevel={handlePayToPlay} canAfford={fluorBalance >= 1} isLoading={walletLoading} />
-      )}
+      )} */}
     </div>
   )
 }

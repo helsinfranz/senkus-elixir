@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect } from "react"
-import { getContracts, getSigner, getProvider } from "@/utils/contracts"
+import { getContracts, getReadOnlyContracts, getSigner, getReadProvider } from "@/utils/contracts"
 
 const WalletContext = createContext()
 
@@ -31,6 +31,7 @@ export function WalletProvider({ children }) {
     hasClaimedInitialTokens: false,
   })
   const [contracts, setContracts] = useState(null)
+  const [readOnlyContracts, setReadOnlyContracts] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
@@ -38,10 +39,10 @@ export function WalletProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    if (isConnected && walletAddress && contracts) {
+    if (isConnected && walletAddress && contracts && readOnlyContracts) {
       loadPlayerData()
     }
-  }, [isConnected, walletAddress, contracts])
+  }, [isConnected, walletAddress, contracts, readOnlyContracts])
 
   const checkConnection = async () => {
     if (typeof window !== "undefined" && window.ethereum) {
@@ -60,10 +61,13 @@ export function WalletProvider({ children }) {
 
   const initializeContracts = async () => {
     try {
-      const provider = getProvider()
-      if (provider) {
-        const contractInstances = getContracts(provider)
+      const signer = await getSigner()
+      const readProvider = getReadProvider()
+      if (signer && readProvider) {
+        const contractInstances = getContracts(signer)
+        const contractReadOnlyInstances = getReadOnlyContracts(readProvider)
         setContracts(contractInstances)
+        setReadOnlyContracts(contractReadOnlyInstances)
       }
     } catch (error) {
       console.error("Error initializing contracts:", error)
@@ -71,7 +75,7 @@ export function WalletProvider({ children }) {
   }
 
   const loadPlayerData = async (forceRefresh = false) => {
-    if (!contracts || !walletAddress) return
+    if (!contracts || !readOnlyContracts || !walletAddress) return
 
     setIsLoading(true)
     try {
@@ -80,7 +84,7 @@ export function WalletProvider({ children }) {
         await new Promise((resolve) => setTimeout(resolve, 2000))
       }
 
-      const playerInfo = await contracts.gameController.getPlayerInfo(walletAddress)
+      const playerInfo = await readOnlyContracts.gameController.getPlayerInfo(walletAddress)
 
       const fluorBalanceWei = Number(playerInfo.fluorBalance)
       const fluorBalanceEther = fluorBalanceWei / 1e18
@@ -182,11 +186,12 @@ export function WalletProvider({ children }) {
       hasClaimedInitialTokens: false,
     })
     setContracts(null)
+    setReadOnlyContracts(null)
   }
 
   // Contract interaction functions
   const claimInitialTokens = async () => {
-    if (!contracts) {
+    if (!contracts || !walletAddress || !readOnlyContracts) {
       console.error("Contracts not initialized")
       return false
     }
@@ -232,7 +237,7 @@ export function WalletProvider({ children }) {
   }
 
   const payToPlay = async () => {
-    if (!contracts) return false
+    if (!contracts || !walletAddress || !readOnlyContracts) return false
 
     try {
       setIsLoading(true)
@@ -252,7 +257,7 @@ export function WalletProvider({ children }) {
   }
 
   const claimReward = async () => {
-    if (!contracts) return false
+    if (!contracts || !walletAddress || !readOnlyContracts) return false
 
     try {
       setIsLoading(true)
@@ -270,7 +275,7 @@ export function WalletProvider({ children }) {
   }
 
   const unlockNft = async () => {
-    if (!contracts) return false
+    if (!contracts || !readOnlyContracts || !walletAddress) return false
 
     try {
       setIsLoading(true)
@@ -304,6 +309,7 @@ export function WalletProvider({ children }) {
     nftCount,
     playerData,
     contracts,
+    readOnlyContracts,
     isLoading,
     connectWallet,
     disconnectWallet,
