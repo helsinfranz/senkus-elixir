@@ -32,6 +32,6 @@ contract KingdomBlueprintNFT is ERC721, Ownable {
 
     function _baseURI() internal pure override returns (string memory) {
         return
-            "https://rose-permanent-cricket-557.mypinata.cloud/ipfs/bafybeie7iiiwjxkucnzb2ut7fdmellhp7rmuicp3ubxbqia2wvzpoqeloe";
+            "https://rose-permanent-cricket-557.mypinata.cloud/ipfs/bafkreibhb5zs6qv5fhhie7fphrnii2hexkiahxdan3jms7atnxffywbgea";
     }
 }
