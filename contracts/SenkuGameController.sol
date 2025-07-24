@@ -102,6 +102,7 @@ contract SenkuGameController is Ownable {
     function unlockNft() external {
         token.burnFrom(msg.sender, NFT_UNLOCK_COST);
         nft.mintTo(msg.sender);
+        12asc12c// change to nft.safeMint(msg.sender);
         emit NftUnlocked(msg.sender);
     }
 

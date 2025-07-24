@@ -11,21 +11,24 @@ import { useWallet } from "@/contexts/wallet-context"
 function ProfileContent() {
   const { walletAddress, fluorBalance, nftCount, playerData, isLoading } = useWallet()
 
-  // Mock NFT data - you mentioned to ignore the NFT display for now
-  const [nfts] = useState([
-    {
-      id: 1,
-      name: "Atomic Structure Blueprint",
-      rarity: "Rare",
-      description: "A detailed blueprint of atomic structures discovered in the Kingdom of Science.",
-    },
-    {
-      id: 2,
-      name: "Chemical Formula Codex",
-      rarity: "Epic",
-      description: "Ancient formulas for creating advanced compounds and materials.",
-    },
-  ])
+  // Remove the mock NFT state and replace with dynamic NFT generation
+  const generateNftData = (count) => {
+    const nfts = []
+    for (let i = 1; i <= count; i++) {
+      nfts.push({
+        id: i,
+        name: "Scientific Blueprint",
+        description: "Blueprint for the Revival of Civilization",
+        image:
+          "https://rose-permanent-cricket-557.mypinata.cloud/ipfs/bafybeie7iiiwjxkucnzb2ut7fdmellhp7rmuicp3ubxbqia2wvzpoqeloe",
+        rarity: "Common", // All NFTs are legendary
+      })
+    }
+    return nfts
+  }
+
+  // Generate NFTs based on actual count
+  const nfts = generateNftData(nftCount)
 
   const [selectedNft, setSelectedNft] = useState(null)
 
@@ -122,15 +125,30 @@ function ProfileContent() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {nfts.slice(0, nftCount).map((nft) => (
+                {nfts.map((nft) => (
                   <Card
                     key={nft.id}
                     className="bg-gray-900/60 backdrop-blur-md border border-gray-700/50 hover:border-green-500/50 transition-all duration-300 cursor-pointer transform hover:scale-105"
                     onClick={() => setSelectedNft(nft)}
                   >
                     <CardContent className="p-4">
-                      <div className="aspect-square bg-gradient-to-br from-green-900/20 to-blue-900/20 rounded-lg mb-4 flex items-center justify-center border border-gray-600/30">
-                        <div className="text-4xl md:text-6xl">🧬</div>
+                      <div className="aspect-square bg-gradient-to-br from-green-900/20 to-blue-900/20 rounded-lg mb-4 flex items-center justify-center border border-gray-600/30 overflow-hidden">
+                        <img
+                          src={nft.image || "/placeholder.svg"}
+                          alt={nft.name}
+                          className="w-full h-full object-cover rounded-lg"
+                          onError={(e) => {
+                            // Fallback to emoji if image fails to load
+                            e.target.style.display = "none"
+                            e.target.nextSibling.style.display = "flex"
+                          }}
+                        />
+                        <div
+                          className="w-full h-full items-center justify-center text-4xl md:text-6xl"
+                          style={{ display: "none" }}
+                        >
+                          🧬
+                        </div>
                       </div>
                       <h3 className="text-white font-semibold mb-2 text-sm md:text-base">{nft.name}</h3>
                       <Badge className={`text-xs ${getRarityStyle(nft.rarity)}`}>{nft.rarity}</Badge>
@@ -148,8 +166,23 @@ function ProfileContent() {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-gray-900/90 backdrop-blur-md border border-gray-700/50 rounded-lg max-w-md w-full p-4 md:p-6">
             <div className="text-center mb-4">
-              <div className="aspect-square bg-gradient-to-br from-green-900/20 to-blue-900/20 rounded-lg mb-4 flex items-center justify-center border border-gray-600/30">
-                <div className="text-6xl md:text-8xl">🧬</div>
+              <div className="aspect-square bg-gradient-to-br from-green-900/20 to-blue-900/20 rounded-lg mb-4 flex items-center justify-center border border-gray-600/30 overflow-hidden">
+                <img
+                  src={selectedNft.image || "/placeholder.svg"}
+                  alt={selectedNft.name}
+                  className="w-full h-full object-cover rounded-lg"
+                  onError={(e) => {
+                    // Fallback to emoji if image fails to load
+                    e.target.style.display = "none"
+                    e.target.nextSibling.style.display = "flex"
+                  }}
+                />
+                <div
+                  className="w-full h-full items-center justify-center text-6xl md:text-8xl"
+                  style={{ display: "none" }}
+                >
+                  🧬
+                </div>
               </div>
               <h3 className="text-white font-bold text-lg md:text-xl mb-2">{selectedNft.name}</h3>
               <Badge className={`mb-4 ${getRarityStyle(selectedNft.rarity)}`}>{selectedNft.rarity}</Badge>

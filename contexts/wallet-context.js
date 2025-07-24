@@ -279,15 +279,6 @@ export function WalletProvider({ children }) {
 
     try {
       setIsLoading(true)
-
-      // First approve the game controller to spend tokens
-      const approveTx = await contracts.fluoriteToken.approve(
-        contracts.gameController.target,
-        "10000000000000000000", // 10 FLUOR in wei
-      )
-      await approveTx.wait()
-
-      // Then unlock NFT
       const tx = await contracts.gameController.unlockNft()
       await tx.wait()
       await loadPlayerData(true) // Force refresh after NFT unlock
