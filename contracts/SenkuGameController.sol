@@ -15,9 +15,9 @@ contract SenkuGameController is Ownable {
     uint256 public constant LEVELS_PER_REWARD_SET = 5;
 
     struct PlayerData {
-        uint256 currentLevel;           // Level currently being played (0 = none)
-        uint256 levelsCompleted;        // Total levels completed
-        uint256 lastRewardClaimedSet;   // Number of 5-level sets claimed
+        uint256 currentLevel; // Level currently being played (0 = none)
+        uint256 levelsCompleted; // Total levels completed
+        uint256 lastRewardClaimedSet; // Number of 5-level sets claimed
         bool hasClaimedInitialTokens;
     }
 
@@ -87,7 +87,11 @@ contract SenkuGameController is Ownable {
 
         uint256 totalReward = 0;
 
-        for (uint256 i = player.lastRewardClaimedSet + 1; i <= setsCompleted; i++) {
+        for (
+            uint256 i = player.lastRewardClaimedSet + 1;
+            i <= setsCompleted;
+            i++
+        ) {
             totalReward += (5 + i) * 1 ether;
         }
 
@@ -101,21 +105,26 @@ contract SenkuGameController is Ownable {
      */
     function unlockNft() external {
         token.burnFrom(msg.sender, NFT_UNLOCK_COST);
-        nft.mintTo(msg.sender);
-        12asc12c// change to nft.safeMint(msg.sender);
+        nft.safeMint(msg.sender);
         emit NftUnlocked(msg.sender);
     }
 
     /**
      * @notice View all player details.
      */
-    function getPlayerInfo(address player) external view returns (
-        uint256 fluorBalance,
-        uint256 currentLevel,
-        uint256 levelsCompleted,
-        uint256 nftCount,
-        uint256 claimableRewardSets
-    ) {
+    function getPlayerInfo(
+        address player
+    )
+        external
+        view
+        returns (
+            uint256 fluorBalance,
+            uint256 currentLevel,
+            uint256 levelsCompleted,
+            uint256 nftCount,
+            uint256 claimableRewardSets
+        )
+    {
         PlayerData storage p = players[player];
         fluorBalance = token.balanceOf(player);
         currentLevel = p.currentLevel;

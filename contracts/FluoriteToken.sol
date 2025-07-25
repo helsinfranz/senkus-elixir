@@ -9,7 +9,10 @@ contract FluoriteToken is ERC20, Ownable {
 
     constructor(
         address initialOwner
-    ) ERC20("Fluorite", "FLUOR") Ownable(initialOwner) {}
+    ) ERC20("Fluorite", "FLUOR") Ownable(initialOwner) {
+        gameController = msg.sender;
+        _mint(initialOwner, 1_000_000_000 * 10 ** decimals());
+    }
 
     modifier onlyGame() {
         require(
